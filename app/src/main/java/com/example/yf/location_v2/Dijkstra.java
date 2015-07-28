@@ -4,6 +4,7 @@ package com.example.yf.location_v2;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.View;
@@ -38,18 +39,24 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
 
     final int V = 31;
+
     private BeaconManager beaconManager;
     String UUID, major, minor, classid, classname, Dist;
     Collection<Beacon> max;
-    TextView out, jsonout,tmajor,tminor;
+    TextView out, jsonout,tmajor,tminor,testbeacon;
+    private String android_id;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dijkstra);
 
+        android_id = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);//get andorid device id!!!
+
 
         tmajor=(TextView)findViewById(R.id.showText1);
         tminor=(TextView)findViewById(R.id.showText2);
+        tminor.setSelected(true);
         Button bt = (Button) findViewById(R.id.button);
         bt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -104,9 +111,9 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         setMap(SP.graph);
 
         SP.initialMatrix(false);
-
-        SP.floydWarshell.calculateDistance();
-        SP.floydWarshell.output();
+//
+//        SP.floydWarshell.calculateDistance();
+//        SP.floydWarshell.output();
 
         SP.dijkstra.calculateDistance(source);
         SP.dijkstra.output(option, destination);
@@ -212,6 +219,9 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         graph[30].adjacentEdge(29, 3);
     }
 
+
+    //--------------------------------------Beacon---------------------------------------------------
+
     public void onBeaconServiceConnect() {
         beaconManager.setRangeNotifier(new RangeNotifier() {
             @Override
@@ -271,7 +281,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
     public void postData() {
         // Create a new HttpClient and Post Header
         HttpClient httpclient = new DefaultHttpClient();
-        HttpPost httppost = new HttpPost("http://120.114.104.148/compare.php");
+        HttpPost httppost = new HttpPost("http://192.168.7.25/compare.php");
 
         Log.w("mydebug1", UUID);
         Log.w("mydebug2",major);
@@ -283,6 +293,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
             nameValuePairs.add(new BasicNameValuePair("uuid", UUID));
             nameValuePairs.add(new BasicNameValuePair("major", major));
             nameValuePairs.add(new BasicNameValuePair("minor", minor));
+            nameValuePairs.add(new BasicNameValuePair("android_id",android_id));
             httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs,
                     HTTP.UTF_8));
 
@@ -328,7 +339,8 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
             // showData();
 //            jsonout.setText(classid + "  " + classname);
                 tmajor.setText(String.valueOf(major));
-                tminor.setText(String.valueOf(minor));
+                tminor.setText(String.valueOf(classid+classname));
+
 
         }
 
