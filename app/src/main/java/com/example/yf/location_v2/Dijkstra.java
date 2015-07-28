@@ -41,14 +41,15 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
     private BeaconManager beaconManager;
     String UUID, major, minor, classid, classname, Dist;
     Collection<Beacon> max;
-    TextView out, jsonout;
+    TextView out, jsonout,tmajor,tminor;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dijkstra);
 
 
-
+        tmajor=(TextView)findViewById(R.id.showText1);
+        tminor=(TextView)findViewById(R.id.showText2);
         Button bt = (Button) findViewById(R.id.button);
         bt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,8 +58,9 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                 String out;
 
 //                EditText et1 = (EditText) findViewById(R.id.editText1);
-                EditText et2 = (EditText) findViewById(R.id.editText2);
+//                EditText et2 = (EditText) findViewById(R.id.editText2);
                 EditText et3 = (EditText) findViewById(R.id.editText3);
+
 
                 try {
                     sour = Integer.parseInt(minor.toString());
@@ -66,13 +68,13 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                     sour = 0;
                     e.printStackTrace();
                 }
-
-                try {
-                    opti = Integer.parseInt(et2.getText().toString());
-                } catch (Exception e) {
-                    opti = 0;
-                    e.printStackTrace();
-                }
+//
+//                try {
+//                    opti = Integer.parseInt(et2.getText().toString());
+//                } catch (Exception e) {
+//                    opti = 0;
+//                    e.printStackTrace();
+//                }
 
                 try {
                     dest = Integer.parseInt(et3.getText().toString());
@@ -81,7 +83,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                     e.printStackTrace();
                 }
 
-                out = calculateShortestPath(sour, dest, opti);
+                out = calculateShortestPath(sour, dest, 2);
 
                 TextView tv = (TextView) findViewById(R.id.textView);
                 tv.setText(out);
@@ -324,8 +326,9 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         protected void onPostExecute(Integer result) {
             super.onPostExecute(result);
             // showData();
-            jsonout.setText(classid + "  " + classname);
-
+//            jsonout.setText(classid + "  " + classname);
+                tmajor.setText(String.valueOf(major));
+                tminor.setText(String.valueOf(minor));
 
         }
 
