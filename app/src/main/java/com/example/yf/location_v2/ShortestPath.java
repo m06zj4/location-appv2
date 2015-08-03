@@ -237,8 +237,10 @@ public class ShortestPath {
                     TextOut += inDistMatrix[i][j] + "\t";
             }
             TextOut += "\n";
+
         }
         TextOut += "\n";
+
 
 
 

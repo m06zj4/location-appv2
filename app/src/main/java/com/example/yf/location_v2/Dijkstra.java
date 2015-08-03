@@ -28,6 +28,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -39,7 +40,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
 
     final int V = 31;
-
+    int NodeTotal;
     private BeaconManager beaconManager;
     String UUID, major, minor, classid, classname, Dist;
     Collection<Beacon> max;
@@ -282,10 +283,10 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         // Create a new HttpClient and Post Header
         HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost("http://192.168.7.25/compare.php");
-
-        Log.w("mydebug1", UUID);
-        Log.w("mydebug2",major);
-        Log.w("mydebug3",minor);
+//
+//        Log.w("mydebug1", UUID);
+//        Log.w("mydebug2",major);
+//        Log.w("mydebug3",minor);
 
         try {
             // Add your data
@@ -322,6 +323,43 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         } catch (Exception e) {
         }
     }
+    public Object jsonParse(int action, String jsonString) {
+        try {
+            int road;
+            int count = 0;
+            int[][] temp;
+
+            JSONObject jsonData = new JSONObject(jsonString);
+            JSONObject information = jsonData.getJSONObject("information");
+            NodeTotal = information.getInt("node");
+            road = information.getInt("road");
+
+            temp = new int[road][3]; // node is [0] , neighbor is [1] , cost is [2]
+
+            JSONArray algorithm = jsonData.getJSONArray("algorithm");
+
+            for (int i = 0; i < NodeTotal; i++) {
+                JSONObject nowNode = algorithm.getJSONObject(i);
+                JSONArray neighbor = nowNode.getJSONArray("neighbor");
+                JSONArray cost = nowNode.getJSONArray("cost");
+                int now = nowNode.getInt("this");
+                Log.w("123", String.valueOf(now));
+                for (int j = 0; j < neighbor.length(); j++) {
+                    temp[count][0] = now;
+                    temp[count][1] = neighbor.getInt(j);
+                    temp[count][2] = cost.getInt(j);
+                    count++;
+                }
+            }
+
+            return temp;
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    return null;
+    }
 
 
     class LoadingDataAsyncTask extends AsyncTask<String, Integer, Integer> {
@@ -356,6 +394,8 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
 
     }
+
+
 }
 
 
