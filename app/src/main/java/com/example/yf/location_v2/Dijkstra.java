@@ -18,27 +18,25 @@ import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Collection;
-import java.util.List;
 
 public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
-
+    private final int MAP = 2;
     final int V = 31;
     int NodeTotal;
     private BeaconManager beaconManager;
@@ -46,6 +44,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
     Collection<Beacon> max;
     TextView out, jsonout,tmajor,tminor,testbeacon;
     private String android_id;
+    ShortestPath SP;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,14 +103,17 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         beaconManager.getBeaconParsers().add(new BeaconParser()
                 .setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));     //0215為讀取iBeacon  beac為altBeacon
         beaconManager.bind(this);
+
     }
 
+
+
     public String calculateShortestPath(int source, int destination, int option) {
-        ShortestPath SP = new ShortestPath(V);
+//        ShortestPath SP = new ShortestPath(V);
 
-        setMap(SP.graph);
+//        setMap(SP.graph);
 
-        SP.initialMatrix(false);
+//        SP.initialMatrix(false);
 //
 //        SP.floydWarshell.calculateDistance();
 //        SP.floydWarshell.output();
@@ -122,102 +124,116 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         return SP.TextOut;
     }
 
-    public void setMap(ShortestPath.vertex[] graph) {
+//    public void setMap(ShortestPath.vertex[] graph) {
+        public void setMap(int[][] mapData) {
 
-        graph[0].adjacentEdge(1, 4);
+//        graph[0].adjacentEdge(1, 4);
+//
+//        graph[1].adjacentEdge(0, 4);
+//        graph[1].adjacentEdge(2, 6);
+//        graph[1].adjacentEdge(5, 1);
+//
+//        graph[2].adjacentEdge(1, 6);
+//        graph[2].adjacentEdge(3, 5);
+//        graph[2].adjacentEdge(6, 5);
+//
+//        graph[3].adjacentEdge(2, 5);
+//        graph[3].adjacentEdge(4, 5);
+//
+//        graph[4].adjacentEdge(3, 5);
+//        graph[4].adjacentEdge(7, 5);
+//        graph[4].adjacentEdge(9, 15);
+//
+//        graph[5].adjacentEdge(1, 1);
+//        graph[5].adjacentEdge(8, 8);
+//
+//        graph[6].adjacentEdge(2, 5);
+//
+//        graph[7].adjacentEdge(4, 5);
+//
+//        graph[8].adjacentEdge(5, 8);
+//        graph[8].adjacentEdge(10, 5);
+//
+//        graph[9].adjacentEdge(4, 15);
+//        graph[9].adjacentEdge(11, 8);
+//
+//        graph[10].adjacentEdge(8, 5);
+//        graph[10].adjacentEdge(12, 10);
+//
+//        graph[11].adjacentEdge(9, 8);
+//        graph[11].adjacentEdge(14, 11);
+//
+//        graph[12].adjacentEdge(10, 10);
+//        graph[12].adjacentEdge(13, 16);
+//
+//        graph[13].adjacentEdge(12, 16);
+//        graph[13].adjacentEdge(14, 11);
+//
+//        graph[14].adjacentEdge(11, 11);
+//        graph[14].adjacentEdge(13, 11);
+//        graph[14].adjacentEdge(20, 11);
+//
+//        graph[15].adjacentEdge(16, 2);
+//
+//        graph[16].adjacentEdge(15, 2);
+//        graph[16].adjacentEdge(17, 2);
+//
+//        graph[17].adjacentEdge(16, 2);
+//        graph[17].adjacentEdge(18, 6);
+//        graph[17].adjacentEdge(21, 7);
+//
+//        graph[18].adjacentEdge(17, 6);
+//        graph[18].adjacentEdge(19, 6);
+//
+//        graph[19].adjacentEdge(18, 6);
+//        graph[19].adjacentEdge(20, 3);
+//
+//        graph[20].adjacentEdge(14, 11);
+//        graph[20].adjacentEdge(19, 3);
+//        graph[20].adjacentEdge(22, 8);
+//
+//        graph[21].adjacentEdge(17, 7);
+//        graph[21].adjacentEdge(23, 8);
+//
+//        graph[22].adjacentEdge(20, 8);
+//        graph[22].adjacentEdge(24, 12);
+//
+//        graph[23].adjacentEdge(21, 8);
+//        graph[23].adjacentEdge(25, 13);
+//
+//        graph[24].adjacentEdge(22, 12);
+//        graph[24].adjacentEdge(26, 3);
+//
+//        graph[25].adjacentEdge(23, 13);
+//        graph[25].adjacentEdge(26, 4);
+//
+//        graph[26].adjacentEdge(24, 3);
+//        graph[26].adjacentEdge(25, 4);
+//        graph[26].adjacentEdge(30, 23);
+//
+//        graph[27].adjacentEdge(28, 2);
+//
+//        graph[28].adjacentEdge(27, 2);
+//        graph[28].adjacentEdge(29, 6);
+//
+//        graph[29].adjacentEdge(28, 6);
+//        graph[29].adjacentEdge(30, 3);
+//
+//        graph[30].adjacentEdge(26, 23);
+//        graph[30].adjacentEdge(29, 3);
+            Log.w("mydebug222",String.valueOf(mapData));
+        int node, neighbor, cost;
+        SP = new ShortestPath(NodeTotal);
 
-        graph[1].adjacentEdge(0, 4);
-        graph[1].adjacentEdge(2, 6);
-        graph[1].adjacentEdge(5, 1);
+        for (int i = 0; i < mapData.length; i++) {
+            node = mapData[i][0];
+            neighbor = mapData[i][1];
+            cost = mapData[i][2];
 
-        graph[2].adjacentEdge(1, 6);
-        graph[2].adjacentEdge(3, 5);
-        graph[2].adjacentEdge(6, 5);
+            SP.graph[node].adjacentEdge(neighbor, cost);
+        }
 
-        graph[3].adjacentEdge(2, 5);
-        graph[3].adjacentEdge(4, 5);
-
-        graph[4].adjacentEdge(3, 5);
-        graph[4].adjacentEdge(7, 5);
-        graph[4].adjacentEdge(9, 15);
-
-        graph[5].adjacentEdge(1, 1);
-        graph[5].adjacentEdge(8, 8);
-
-        graph[6].adjacentEdge(2, 5);
-
-        graph[7].adjacentEdge(4, 5);
-
-        graph[8].adjacentEdge(5, 8);
-        graph[8].adjacentEdge(10, 5);
-
-        graph[9].adjacentEdge(4, 15);
-        graph[9].adjacentEdge(11, 8);
-
-        graph[10].adjacentEdge(8, 5);
-        graph[10].adjacentEdge(12, 10);
-
-        graph[11].adjacentEdge(9, 8);
-        graph[11].adjacentEdge(14, 11);
-
-        graph[12].adjacentEdge(10, 10);
-        graph[12].adjacentEdge(13, 16);
-
-        graph[13].adjacentEdge(12, 16);
-        graph[13].adjacentEdge(14, 11);
-
-        graph[14].adjacentEdge(11, 11);
-        graph[14].adjacentEdge(13, 11);
-        graph[14].adjacentEdge(20, 11);
-
-        graph[15].adjacentEdge(16, 2);
-
-        graph[16].adjacentEdge(15, 2);
-        graph[16].adjacentEdge(17, 2);
-
-        graph[17].adjacentEdge(16, 2);
-        graph[17].adjacentEdge(18, 6);
-        graph[17].adjacentEdge(21, 7);
-
-        graph[18].adjacentEdge(17, 6);
-        graph[18].adjacentEdge(19, 6);
-
-        graph[19].adjacentEdge(18, 6);
-        graph[19].adjacentEdge(20, 3);
-
-        graph[20].adjacentEdge(14, 11);
-        graph[20].adjacentEdge(19, 3);
-        graph[20].adjacentEdge(22, 8);
-
-        graph[21].adjacentEdge(17, 7);
-        graph[21].adjacentEdge(23, 8);
-
-        graph[22].adjacentEdge(20, 8);
-        graph[22].adjacentEdge(24, 12);
-
-        graph[23].adjacentEdge(21, 8);
-        graph[23].adjacentEdge(25, 13);
-
-        graph[24].adjacentEdge(22, 12);
-        graph[24].adjacentEdge(26, 3);
-
-        graph[25].adjacentEdge(23, 13);
-        graph[25].adjacentEdge(26, 4);
-
-        graph[26].adjacentEdge(24, 3);
-        graph[26].adjacentEdge(25, 4);
-        graph[26].adjacentEdge(30, 23);
-
-        graph[27].adjacentEdge(28, 2);
-
-        graph[28].adjacentEdge(27, 2);
-        graph[28].adjacentEdge(29, 6);
-
-        graph[29].adjacentEdge(28, 6);
-        graph[29].adjacentEdge(30, 3);
-
-        graph[30].adjacentEdge(26, 23);
-        graph[30].adjacentEdge(29, 3);
+        SP.initialMatrix(false);
     }
 
 
@@ -243,8 +259,8 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                         }
                     }
 
-
                     new LoadingDataAsyncTask().execute();
+
 
 //                    String RSSI = "RSSI:" + String.valueOf(beacons.iterator().next().getRssi()) + "\n";
 //                    String Dist = "Distance:" + beacons.iterator().next().getDistance() + "\n";
@@ -265,52 +281,96 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         } catch (RemoteException e) {
         }
 
+
+
     }
 
-//    Handler handler = new Handler() {
-//        public void handleMessage(Message msg) {
-//
-//            if (msg.what == 1) {
-//                String print = (String) msg.obj;
-//                out.setText(print);
-//                new LoadingDataAsyncTask().execute();
-//            }
-//        }
-
-
-    //    };
     public void postData() {
         // Create a new HttpClient and Post Header
-        HttpClient httpclient = new DefaultHttpClient();
-        HttpPost httppost = new HttpPost("http://192.168.7.25/compare.php");
+//        HttpClient httpclient = new DefaultHttpClient();
+//        HttpPost httppost = new HttpPost("http://120.114.104.122:8081/compare.php");
 //
-//        Log.w("mydebug1", UUID);
-//        Log.w("mydebug2",major);
-//        Log.w("mydebug3",minor);
-
-        try {
-            // Add your data
-            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-            nameValuePairs.add(new BasicNameValuePair("uuid", UUID));
-            nameValuePairs.add(new BasicNameValuePair("major", major));
-            nameValuePairs.add(new BasicNameValuePair("minor", minor));
-            nameValuePairs.add(new BasicNameValuePair("android_id",android_id));
-            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs,
-                    HTTP.UTF_8));
-
-            HttpResponse response = httpclient.execute(httppost);
-
-            if (response.getStatusLine().getStatusCode() == 200) {
-                String strResult = EntityUtils.toString(response.getEntity());
-                json(strResult);
+////        Log.w("mydebug1", UUID);
+////        Log.w("mydebug2",major);
+////        Log.w("mydebug3",minor);
+//
+//        try {
+//            // Add your data
+//            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+//            nameValuePairs.add(new BasicNameValuePair("uuid", UUID));
+//            nameValuePairs.add(new BasicNameValuePair("major", major));
+//            nameValuePairs.add(new BasicNameValuePair("minor", minor));
+//            nameValuePairs.add(new BasicNameValuePair("android_id",android_id));
+//            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs,
+//                    HTTP.UTF_8));
+//
+//            HttpResponse response = httpclient.execute(httppost);
+//
+//            if (response.getStatusLine().getStatusCode() == 200) {
+//                String strResult = EntityUtils.toString(response.getEntity());
+//                json(strResult);
 //                Log.w("mydebug", strResult);
+//
+//            }
+//
+//        } catch (IOException e) {
+//
+//        }
+    }
+    //-------------------------------------------------------------------------------
+    public String http() {
+        String total = "";
+        Log.w("mydebug88","123");
+        try {
 
+            String urlParameters = "uuid=" + URLEncoder.encode(UUID, "UTF-8") + "&major="
+                    + URLEncoder.encode(major, "UTF-8") + "&android_id" + URLEncoder.encode(android_id, "UTF-8");
+            URL url;
+            HttpURLConnection connection = null;
+            try {
+                url = new URL("http://120.114.104.122:8081/test/get_map.php");
+
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                connection.setRequestProperty("Content-Length", "" + Integer.toString(urlParameters.getBytes().length));
+                connection.setDoInput(true);
+                connection.setDoOutput(true);
+
+                DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
+                wr.writeBytes(urlParameters);
+                wr.flush();
+                wr.close();
+                Log.w("mydebug321","yuam");
+                Log.w("mydebug111", urlParameters);
+
+                InputStream is = connection.getInputStream();
+                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    total = total + line;
+                    Log.w("mydebug5487",total);
+                }
+
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
             }
 
-        } catch (IOException e) {
-
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
+
+        return total;
     }
+
+//-------------------------------------------------------------------------------
 
     private void json(String test) {
 //        Log.w("mydebug", test);
@@ -324,42 +384,34 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         }
     }
     public Object jsonParse(int action, String jsonString) {
-        try {
-            int road;
-            int count = 0;
-            int[][] temp;
+       switch (action) {
+           case MAP:
+           try {
+               int road;
+               int count = 0;
+               int[][] temp;
+               JSONObject obj = new JSONObject(jsonString);
+               for (int j = 0; j < obj.length(); j++) {
+                   JSONObject jsondata = obj.getJSONObject(String.valueOf(j));
+                   JSONArray neighbor = jsondata.getJSONArray("neighbor");
+                   JSONArray distance = jsondata.getJSONArray("distance");
+                   int now =jsondata.getInt(String.valueOf(j));
+                   for (int i = 0; i < neighbor.length(); i++) {
 
-            JSONObject jsonData = new JSONObject(jsonString);
-            JSONObject information = jsonData.getJSONObject("information");
-            NodeTotal = information.getInt("node");
-            road = information.getInt("road");
+                   }
 
-            temp = new int[road][3]; // node is [0] , neighbor is [1] , cost is [2]
 
-            JSONArray algorithm = jsonData.getJSONArray("algorithm");
+               }
 
-            for (int i = 0; i < NodeTotal; i++) {
-                JSONObject nowNode = algorithm.getJSONObject(i);
-                JSONArray neighbor = nowNode.getJSONArray("neighbor");
-                JSONArray cost = nowNode.getJSONArray("cost");
-                int now = nowNode.getInt("this");
-                Log.w("123", String.valueOf(now));
-                for (int j = 0; j < neighbor.length(); j++) {
-                    temp[count][0] = now;
-                    temp[count][1] = neighbor.getInt(j);
-                    temp[count][2] = cost.getInt(j);
-                    count++;
-                }
-            }
+               return null ;
 
-            return temp;
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
+           } catch (JSONException e) {
+               e.printStackTrace();
+           }
+       }
     return null;
     }
+
 
 
     class LoadingDataAsyncTask extends AsyncTask<String, Integer, Integer> {
@@ -367,7 +419,9 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         @Override
         protected Integer doInBackground(String... param) {
             // getData();
-            postData();
+//            postData();
+            http();
+
             return null;
         }
 
@@ -377,7 +431,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
             // showData();
 //            jsonout.setText(classid + "  " + classname);
                 tmajor.setText(String.valueOf(major));
-                tminor.setText(String.valueOf(classid+classname));
+                tminor.setText(String.valueOf(minor));
 
 
         }
