@@ -42,7 +42,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
     private BeaconManager beaconManager;
     String UUID, major, minor, classid, classname, Dist;
     Collection<Beacon> max;
-    TextView out, jsonout,tmajor,tminor,testbeacon;
+    TextView out, jsonout, tmajor, tminor, testbeacon;
     private String android_id;
     ShortestPath SP;
 
@@ -54,8 +54,8 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         android_id = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);//get andorid device id!!!
 
 
-        tmajor=(TextView)findViewById(R.id.showText1);
-        tminor=(TextView)findViewById(R.id.showText2);
+        tmajor = (TextView) findViewById(R.id.showText1);
+        tminor = (TextView) findViewById(R.id.showText2);
         tminor.setSelected(true);
         Button bt = (Button) findViewById(R.id.button);
         bt.setOnClickListener(new View.OnClickListener() {
@@ -107,7 +107,6 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
     }
 
 
-
     public String calculateShortestPath(int source, int destination, int option) {
 //        ShortestPath SP = new ShortestPath(V);
 
@@ -124,8 +123,278 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         return SP.TextOut;
     }
 
-//    public void setMap(ShortestPath.vertex[] graph) {
-        public void setMap(int[][] mapData) {
+    //    public void setMap(ShortestPath.vertex[] graph) {
+    public void setMap(int[][] mapData) {
+
+        Log.w("mydebug222", String.valueOf(mapData));
+        int node, neighbor, cost;
+//        SP = new ShortestPath(NodeTotal);
+        SP = new ShortestPath(31);
+
+        for (int i = 0; i < mapData.length; i++) {
+            node = mapData[i][0];
+            neighbor = mapData[i][1];
+            cost = mapData[i][2];
+
+            SP.graph[node].adjacentEdge(neighbor, cost);
+        }
+
+        SP.initialMatrix(false);
+    }
+
+
+    //--------------------------------------Beacon---------------------------------------------------
+
+    public void onBeaconServiceConnect() {
+        beaconManager.setRangeNotifier(new RangeNotifier() {
+            @Override
+            public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+
+
+                if (beacons.size() > 0) {
+                    UUID = beacons.iterator().next().getId1().toString();
+                    major = beacons.iterator().next().getId2().toString();
+                    minor = beacons.iterator().next().getId3().toString();
+                    Dist = String.valueOf(beacons.iterator().next().getDistance());
+
+                    if (max == null) {
+                        max = beacons;
+                    } else {
+                        if (max.iterator().next().getDistance() > beacons.iterator().next().getDistance()) {
+                            max = beacons;
+                        }
+                    }
+
+                    new LoadingDataAsyncTask().execute();
+
+
+//                    String RSSI = "RSSI:" + String.valueOf(beacons.iterator().next().getRssi()) + "\n";
+//                    String Dist = "Distance:" + beacons.iterator().next().getDistance() + "\n";
+//                    String android = "address" + beacons.iterator().next().getBluetoothAddress() + "\n";
+
+
+//                    Message msg = new Message();
+//                    msg.what = 1;
+//                    msg.obj = UUID + major + minor + RSSI + Dist + android;
+//                    handler.sendMessage(msg);
+                }
+
+            }
+
+        });
+        try {
+            beaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", null, null, null));
+        } catch (RemoteException e) {
+        }
+
+
+    }
+
+    public void postData() {
+        // Create a new HttpClient and Post Header
+//        HttpClient httpclient = new DefaultHttpClient();
+//        HttpPost httppost = new HttpPost("http://120.114.104.122:8081/compare.php");
+//
+////        Log.w("mydebug1", UUID);
+////        Log.w("mydebug2",major);
+////        Log.w("mydebug3",minor);
+//
+//        try {
+//            // Add your data
+//            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+//            nameValuePairs.add(new BasicNameValuePair("uuid", UUID));
+//            nameValuePairs.add(new BasicNameValuePair("major", major));
+//            nameValuePairs.add(new BasicNameValuePair("minor", minor));
+//            nameValuePairs.add(new BasicNameValuePair("android_id",android_id));
+//            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs,
+//                    HTTP.UTF_8));
+//
+//            HttpResponse response = httpclient.execute(httppost);
+//
+//            if (response.getStatusLine().getStatusCode() == 200) {
+//                String strResult = EntityUtils.toString(response.getEntity());
+//                json(strResult);
+//                Log.w("mydebug", strResult);
+//
+//            }
+//
+//        } catch (IOException e) {
+//
+//        }
+    }
+
+    //-------------------------------------------------------------------------------
+    public String http() {
+        String total = "";
+        try {
+
+            String urlParameters = "uuid=" + URLEncoder.encode(UUID, "UTF-8") + "&major="
+                    + URLEncoder.encode(major, "UTF-8") + "&android_id" + URLEncoder.encode(android_id, "UTF-8");
+            URL url;
+            HttpURLConnection connection = null;
+            try {
+                url = new URL("http://120.114.104.122:8081/test/get_map.php");
+
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                connection.setRequestProperty("Content-Length", "" + Integer.toString(urlParameters.getBytes().length));
+                connection.setDoInput(true);
+                connection.setDoOutput(true);
+
+                DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
+                wr.writeBytes(urlParameters);
+                wr.flush();
+                wr.close();
+                Log.w("mydebug111", urlParameters);
+
+                InputStream is = connection.getInputStream();
+                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    total = total + line;
+//                    Log.w("mydebug222",total);
+                    jsondata(total);
+                }
+
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+//-------------------------------------------------------------------------------
+
+    private void json(String test) {
+//        Log.w("mydebug", test);
+        try {
+            JSONArray jsonArray = new JSONArray(test);
+            JSONObject jsondata = jsonArray.getJSONObject(0);
+            classid = jsondata.getString("class_id");
+            classname = jsondata.getString("class_name");
+//            jsonout.setText(classid + classname);
+        } catch (Exception e) {
+        }
+    }
+
+    public Object jsonParse(int action, String jsonString) {
+        switch (action) {
+            case MAP:
+                try {
+                    int road;
+                    int count = 0;
+                    int[][] temp;
+                    JSONObject obj = new JSONObject(jsonString);
+                    for (int j = 0; j < obj.length(); j++) {
+                        JSONObject jsondata = obj.getJSONObject(String.valueOf(j));
+                        JSONArray neighbor = jsondata.getJSONArray("neighbor");
+                        JSONArray distance = jsondata.getJSONArray("distance");
+                        int now = jsondata.getInt(String.valueOf(j));
+                        for (int i = 0; i < neighbor.length(); i++) {
+
+                        }
+
+
+                    }
+
+                    return null;
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+        }
+        return null;
+    }
+
+    public void jsondata(String test_1) {
+        try {
+            int count = 0;
+            int[][] temp;
+            Log.w("debug5432", test_1);
+            temp = new int[64][3];
+            JSONArray array = new JSONArray(test_1);
+//            Log.w("mydebug51", "123123");
+            for (int i = 0; i < 31; i++) {
+//                Log.w("mydebug61", "123123");
+                JSONObject jsonobj = array.getJSONObject(i);
+                JSONArray jsonarray = jsonobj.getJSONArray("neighbor");
+                JSONArray jsonarray_2 = jsonobj.getJSONArray("distance");
+//                Log.w("mydebug81", "12365");
+                int now = jsonobj.getInt("this");
+//                Log.w("mydebug100",String.valueOf(now));
+
+                for (int j = 0; j < jsonarray_2.length(); j++) {
+//                    Log.w("mydebug71", "123123");
+                    temp[count][0] = now;
+                    temp[count][1] = jsonarray.getInt(j);
+                    temp[count][2] = jsonarray_2.getInt(j);
+                    count++;
+                    setMap(temp);
+//                    Log.w("mydebug921",String.valueOf(count));
+                }
+            }
+
+        } catch (Exception e) {
+
+        }
+
+    }
+
+
+    class LoadingDataAsyncTask extends AsyncTask<String, Integer, Integer> {
+
+        @Override
+        protected Integer doInBackground(String... param) {
+            // getData();
+//            postData();
+            http();
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Integer result) {
+            super.onPostExecute(result);
+            // showData();
+//            jsonout.setText(classid + "  " + classname);
+            tmajor.setText(String.valueOf(major));
+            tminor.setText(String.valueOf(minor));
+
+
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+
+    }
+
+
+}
+
+
+//Project下之libs新增aar檔
+
+
 
 //        graph[0].adjacentEdge(1, 4);
 //
@@ -221,238 +490,3 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 //
 //        graph[30].adjacentEdge(26, 23);
 //        graph[30].adjacentEdge(29, 3);
-            Log.w("mydebug222",String.valueOf(mapData));
-        int node, neighbor, cost;
-        SP = new ShortestPath(NodeTotal);
-
-        for (int i = 0; i < mapData.length; i++) {
-            node = mapData[i][0];
-            neighbor = mapData[i][1];
-            cost = mapData[i][2];
-
-            SP.graph[node].adjacentEdge(neighbor, cost);
-        }
-
-        SP.initialMatrix(false);
-    }
-
-
-    //--------------------------------------Beacon---------------------------------------------------
-
-    public void onBeaconServiceConnect() {
-        beaconManager.setRangeNotifier(new RangeNotifier() {
-            @Override
-            public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
-
-
-                if (beacons.size() > 0) {
-                    UUID = beacons.iterator().next().getId1().toString();
-                    major = beacons.iterator().next().getId2().toString();
-                    minor = beacons.iterator().next().getId3().toString();
-                    Dist = String.valueOf(beacons.iterator().next().getDistance());
-
-                    if (max == null) {
-                        max = beacons;
-                    } else {
-                        if (max.iterator().next().getDistance() > beacons.iterator().next().getDistance()) {
-                            max = beacons;
-                        }
-                    }
-
-                    new LoadingDataAsyncTask().execute();
-
-
-//                    String RSSI = "RSSI:" + String.valueOf(beacons.iterator().next().getRssi()) + "\n";
-//                    String Dist = "Distance:" + beacons.iterator().next().getDistance() + "\n";
-//                    String android = "address" + beacons.iterator().next().getBluetoothAddress() + "\n";
-
-
-//                    Message msg = new Message();
-//                    msg.what = 1;
-//                    msg.obj = UUID + major + minor + RSSI + Dist + android;
-//                    handler.sendMessage(msg);
-                }
-
-            }
-
-        });
-        try {
-            beaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", null, null, null));
-        } catch (RemoteException e) {
-        }
-
-
-
-    }
-
-    public void postData() {
-        // Create a new HttpClient and Post Header
-//        HttpClient httpclient = new DefaultHttpClient();
-//        HttpPost httppost = new HttpPost("http://120.114.104.122:8081/compare.php");
-//
-////        Log.w("mydebug1", UUID);
-////        Log.w("mydebug2",major);
-////        Log.w("mydebug3",minor);
-//
-//        try {
-//            // Add your data
-//            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-//            nameValuePairs.add(new BasicNameValuePair("uuid", UUID));
-//            nameValuePairs.add(new BasicNameValuePair("major", major));
-//            nameValuePairs.add(new BasicNameValuePair("minor", minor));
-//            nameValuePairs.add(new BasicNameValuePair("android_id",android_id));
-//            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs,
-//                    HTTP.UTF_8));
-//
-//            HttpResponse response = httpclient.execute(httppost);
-//
-//            if (response.getStatusLine().getStatusCode() == 200) {
-//                String strResult = EntityUtils.toString(response.getEntity());
-//                json(strResult);
-//                Log.w("mydebug", strResult);
-//
-//            }
-//
-//        } catch (IOException e) {
-//
-//        }
-    }
-    //-------------------------------------------------------------------------------
-    public String http() {
-        String total = "";
-        Log.w("mydebug88","123");
-        try {
-
-            String urlParameters = "uuid=" + URLEncoder.encode(UUID, "UTF-8") + "&major="
-                    + URLEncoder.encode(major, "UTF-8") + "&android_id" + URLEncoder.encode(android_id, "UTF-8");
-            URL url;
-            HttpURLConnection connection = null;
-            try {
-                url = new URL("http://120.114.104.122:8081/test/get_map.php");
-
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                connection.setRequestProperty("Content-Length", "" + Integer.toString(urlParameters.getBytes().length));
-                connection.setDoInput(true);
-                connection.setDoOutput(true);
-
-                DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-                wr.writeBytes(urlParameters);
-                wr.flush();
-                wr.close();
-                Log.w("mydebug321","yuam");
-                Log.w("mydebug111", urlParameters);
-
-                InputStream is = connection.getInputStream();
-                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-                String line;
-                while ((line = rd.readLine()) != null) {
-                    total = total + line;
-                    Log.w("mydebug5487",total);
-                }
-
-
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            }
-
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        return total;
-    }
-
-//-------------------------------------------------------------------------------
-
-    private void json(String test) {
-//        Log.w("mydebug", test);
-        try {
-            JSONArray jsonArray = new JSONArray(test);
-            JSONObject jsondata = jsonArray.getJSONObject(0);
-            classid = jsondata.getString("class_id");
-            classname = jsondata.getString("class_name");
-//            jsonout.setText(classid + classname);
-        } catch (Exception e) {
-        }
-    }
-    public Object jsonParse(int action, String jsonString) {
-       switch (action) {
-           case MAP:
-           try {
-               int road;
-               int count = 0;
-               int[][] temp;
-               JSONObject obj = new JSONObject(jsonString);
-               for (int j = 0; j < obj.length(); j++) {
-                   JSONObject jsondata = obj.getJSONObject(String.valueOf(j));
-                   JSONArray neighbor = jsondata.getJSONArray("neighbor");
-                   JSONArray distance = jsondata.getJSONArray("distance");
-                   int now =jsondata.getInt(String.valueOf(j));
-                   for (int i = 0; i < neighbor.length(); i++) {
-
-                   }
-
-
-               }
-
-               return null ;
-
-           } catch (JSONException e) {
-               e.printStackTrace();
-           }
-       }
-    return null;
-    }
-
-
-
-    class LoadingDataAsyncTask extends AsyncTask<String, Integer, Integer> {
-
-        @Override
-        protected Integer doInBackground(String... param) {
-            // getData();
-//            postData();
-            http();
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Integer result) {
-            super.onPostExecute(result);
-            // showData();
-//            jsonout.setText(classid + "  " + classname);
-                tmajor.setText(String.valueOf(major));
-                tminor.setText(String.valueOf(minor));
-
-
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-
-    }
-
-
-}
-
-
-//Project下之libs新增aar檔
-
-
