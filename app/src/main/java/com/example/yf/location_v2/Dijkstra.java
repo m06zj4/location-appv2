@@ -135,6 +135,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
             node = mapData[i][0];
             neighbor = mapData[i][1];
             cost = mapData[i][2];
+            Log.w("mydebugggg",String.valueOf(cost));
 
             SP.graph[node].adjacentEdge(neighbor, cost);
         }
@@ -335,16 +336,17 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                 int now = jsonobj.getInt("this");
 //                Log.w("mydebug100",String.valueOf(now));
 
-                for (int j = 0; j < jsonarray_2.length(); j++) {
+                for (int j = 0; j < jsonarray.length(); j++) {
 //                    Log.w("mydebug71", "123123");
                     temp[count][0] = now;
                     temp[count][1] = jsonarray.getInt(j);
                     temp[count][2] = jsonarray_2.getInt(j);
                     count++;
-                    setMap(temp);
+
 //                    Log.w("mydebug921",String.valueOf(count));
                 }
             }
+            setMap(temp);
 
         } catch (Exception e) {
 
