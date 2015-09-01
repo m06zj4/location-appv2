@@ -22,10 +22,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".iBeaconAccept"
-            android:label="@string/title_activity_i_beacon_accept" >
-        </activity>
     </application>
 
 </manifest>

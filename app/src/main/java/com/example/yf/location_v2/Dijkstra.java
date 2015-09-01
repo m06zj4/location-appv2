@@ -1,15 +1,18 @@
 package com.example.yf.location_v2;
 
 
+import android.app.ProgressDialog;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.altbeacon.beacon.Beacon;
@@ -19,7 +22,6 @@ import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -36,86 +38,78 @@ import java.util.Collection;
 
 public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
-    private final int MAP = 2;
-    final int V = 31;
-    int NodeTotal;
     private BeaconManager beaconManager;
-    String UUID, major, minor, classid, classname, Dist;
+    String UUID, major, minor, Dist, out = "waiting", m06zj4 = "0";
     Collection<Beacon> max;
-    TextView out, jsonout, tmajor, tminor, testbeacon;
     private String android_id;
     ShortestPath SP;
+    private ImageView imageView;
+    private Bitmap bitmap;
+    int img_out = 0, sour = 0;
+    TextView show;
+    ProgressDialog progressDialog;
+
+    private TouchLocation TL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_dijkstra);
+        setContentView(R.layout.img);
 
         android_id = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);//get andorid device id!!!
 
+        progressDialog = ProgressDialog.show(Dijkstra.this, "提醒", "正在取得資訊請稍候");
 
-        tmajor = (TextView) findViewById(R.id.showText1);
-        tminor = (TextView) findViewById(R.id.showText2);
-        tminor.setSelected(true);
-        Button bt = (Button) findViewById(R.id.button);
-        bt.setOnClickListener(new View.OnClickListener() {
+        imageView = (ImageView) findViewById(R.id.image_view);
+//        show = (TextView) findViewById(R.id.textView5);
+        bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.photo);
+        int H = bitmap.getHeight();
+        int W = bitmap.getWidth();
+
+        imageView.setMaxHeight(H);
+        imageView.setMaxWidth(W);
+
+        TL = new TouchLocation(H, W);
+        TL.setDotWithJson("111");
+
+        imageView.setImageBitmap(bitmap);
+
+        imageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View v) {
-                int sour, opti, dest;
-                String out;
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    Log.w("123", "X:" + event.getX() + "  Y:" + event.getY());
+                    Object oo = TL.analyseTouchLocation(event.getX(), event.getY());
+                    if (oo != null) {
+                        img_out = (int) oo;
 
-//                EditText et1 = (EditText) findViewById(R.id.editText1);
-//                EditText et2 = (EditText) findViewById(R.id.editText2);
-                EditText et3 = (EditText) findViewById(R.id.editText3);
+                        try {
+                            sour = Integer.parseInt(minor.toString());
+                        } catch (Exception e) {
+                            sour = 0;
+                            e.printStackTrace();
+                        }
+
+                        m06zj4 = "User_OnClick";
+//                        show.setText("");
+                        new LoadingDataAsyncTask().execute();
 
 
-                try {
-                    sour = Integer.parseInt(minor.toString());
-                } catch (Exception e) {
-                    sour = 0;
-                    e.printStackTrace();
+                    }
                 }
-//
-//                try {
-//                    opti = Integer.parseInt(et2.getText().toString());
-//                } catch (Exception e) {
-//                    opti = 0;
-//                    e.printStackTrace();
-//                }
-
-                try {
-                    dest = Integer.parseInt(et3.getText().toString());
-                } catch (Exception e) {
-                    dest = 0;
-                    e.printStackTrace();
-                }
-
-                out = calculateShortestPath(sour, dest, 2);
-
-                TextView tv = (TextView) findViewById(R.id.textView);
-                tv.setText(out);
-
-
+                return true;
             }
-
         });
+
         beaconManager = BeaconManager.getInstanceForApplication(this);
         beaconManager.getBeaconParsers().add(new BeaconParser()
                 .setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));     //0215為讀取iBeacon  beac為altBeacon
         beaconManager.bind(this);
 
+
     }
 
-
     public String calculateShortestPath(int source, int destination, int option) {
-//        ShortestPath SP = new ShortestPath(V);
-
-//        setMap(SP.graph);
-
-//        SP.initialMatrix(false);
-//
-//        SP.floydWarshell.calculateDistance();
-//        SP.floydWarshell.output();
 
         SP.dijkstra.calculateDistance(source);
         SP.dijkstra.output(option, destination);
@@ -123,26 +117,23 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         return SP.TextOut;
     }
 
-    //    public void setMap(ShortestPath.vertex[] graph) {
     public void setMap(int[][] mapData) {
 
         Log.w("mydebug222", String.valueOf(mapData));
         int node, neighbor, cost;
-//        SP = new ShortestPath(NodeTotal);
         SP = new ShortestPath(31);
 
         for (int i = 0; i < mapData.length; i++) {
             node = mapData[i][0];
             neighbor = mapData[i][1];
             cost = mapData[i][2];
-            Log.w("mydebugggg",String.valueOf(cost));
+            Log.w("mydebugggg", String.valueOf(cost));
 
             SP.graph[node].adjacentEdge(neighbor, cost);
         }
 
         SP.initialMatrix(false);
     }
-
 
     //--------------------------------------Beacon---------------------------------------------------
 
@@ -166,18 +157,14 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                         }
                     }
 
-                    new LoadingDataAsyncTask().execute();
+                    if (m06zj4.equals("0")) {
+                        m06zj4 = "finish_download";
+                        new LoadingDataAsyncTask().execute();
+                    } else {
+                        m06zj4 = "Check_Beacon";
+                        new LoadingDataAsyncTask().execute();
+                    }
 
-
-//                    String RSSI = "RSSI:" + String.valueOf(beacons.iterator().next().getRssi()) + "\n";
-//                    String Dist = "Distance:" + beacons.iterator().next().getDistance() + "\n";
-//                    String android = "address" + beacons.iterator().next().getBluetoothAddress() + "\n";
-
-
-//                    Message msg = new Message();
-//                    msg.what = 1;
-//                    msg.obj = UUID + major + minor + RSSI + Dist + android;
-//                    handler.sendMessage(msg);
                 }
 
             }
@@ -191,40 +178,6 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
     }
 
-    public void postData() {
-        // Create a new HttpClient and Post Header
-//        HttpClient httpclient = new DefaultHttpClient();
-//        HttpPost httppost = new HttpPost("http://120.114.104.122:8081/compare.php");
-//
-////        Log.w("mydebug1", UUID);
-////        Log.w("mydebug2",major);
-////        Log.w("mydebug3",minor);
-//
-//        try {
-//            // Add your data
-//            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-//            nameValuePairs.add(new BasicNameValuePair("uuid", UUID));
-//            nameValuePairs.add(new BasicNameValuePair("major", major));
-//            nameValuePairs.add(new BasicNameValuePair("minor", minor));
-//            nameValuePairs.add(new BasicNameValuePair("android_id",android_id));
-//            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs,
-//                    HTTP.UTF_8));
-//
-//            HttpResponse response = httpclient.execute(httppost);
-//
-//            if (response.getStatusLine().getStatusCode() == 200) {
-//                String strResult = EntityUtils.toString(response.getEntity());
-//                json(strResult);
-//                Log.w("mydebug", strResult);
-//
-//            }
-//
-//        } catch (IOException e) {
-//
-//        }
-    }
-
-    //-------------------------------------------------------------------------------
     public String http() {
         String total = "";
         try {
@@ -234,7 +187,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
             URL url;
             HttpURLConnection connection = null;
             try {
-                url = new URL("http://120.114.104.122:8081/test/get_map.php");
+                url = new URL("http://120.114.138.143/test/get_map.php");
 
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
@@ -254,7 +207,6 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                 String line;
                 while ((line = rd.readLine()) != null) {
                     total = total + line;
-//                    Log.w("mydebug222",total);
                     jsondata(total);
                 }
 
@@ -276,49 +228,6 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         return null;
     }
 
-//-------------------------------------------------------------------------------
-
-    private void json(String test) {
-//        Log.w("mydebug", test);
-        try {
-            JSONArray jsonArray = new JSONArray(test);
-            JSONObject jsondata = jsonArray.getJSONObject(0);
-            classid = jsondata.getString("class_id");
-            classname = jsondata.getString("class_name");
-//            jsonout.setText(classid + classname);
-        } catch (Exception e) {
-        }
-    }
-
-    public Object jsonParse(int action, String jsonString) {
-        switch (action) {
-            case MAP:
-                try {
-                    int road;
-                    int count = 0;
-                    int[][] temp;
-                    JSONObject obj = new JSONObject(jsonString);
-                    for (int j = 0; j < obj.length(); j++) {
-                        JSONObject jsondata = obj.getJSONObject(String.valueOf(j));
-                        JSONArray neighbor = jsondata.getJSONArray("neighbor");
-                        JSONArray distance = jsondata.getJSONArray("distance");
-                        int now = jsondata.getInt(String.valueOf(j));
-                        for (int i = 0; i < neighbor.length(); i++) {
-
-                        }
-
-
-                    }
-
-                    return null;
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-        }
-        return null;
-    }
-
     public void jsondata(String test_1) {
         try {
             int count = 0;
@@ -326,24 +235,17 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
             Log.w("debug5432", test_1);
             temp = new int[64][3];
             JSONArray array = new JSONArray(test_1);
-//            Log.w("mydebug51", "123123");
             for (int i = 0; i < 31; i++) {
-//                Log.w("mydebug61", "123123");
                 JSONObject jsonobj = array.getJSONObject(i);
                 JSONArray jsonarray = jsonobj.getJSONArray("neighbor");
                 JSONArray jsonarray_2 = jsonobj.getJSONArray("distance");
-//                Log.w("mydebug81", "12365");
                 int now = jsonobj.getInt("this");
-//                Log.w("mydebug100",String.valueOf(now));
 
                 for (int j = 0; j < jsonarray.length(); j++) {
-//                    Log.w("mydebug71", "123123");
                     temp[count][0] = now;
                     temp[count][1] = jsonarray.getInt(j);
                     temp[count][2] = jsonarray_2.getInt(j);
                     count++;
-
-//                    Log.w("mydebug921",String.valueOf(count));
                 }
             }
             setMap(temp);
@@ -354,14 +256,27 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
     }
 
-
     class LoadingDataAsyncTask extends AsyncTask<String, Integer, Integer> {
 
         @Override
         protected Integer doInBackground(String... param) {
-            // getData();
-//            postData();
-            http();
+
+            switch (m06zj4) {
+                case "Check_Beacon":
+                    http();
+                    break;
+
+                case "User_OnClick":
+                    out = calculateShortestPath(sour, img_out, 2);
+                    break;
+
+                case "finish_download":
+                    http();
+                    break;
+
+                default:
+                    break;
+            }
 
             return null;
         }
@@ -369,11 +284,25 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         @Override
         protected void onPostExecute(Integer result) {
             super.onPostExecute(result);
-            // showData();
-//            jsonout.setText(classid + "  " + classname);
-            tmajor.setText(String.valueOf(major));
-            tminor.setText(String.valueOf(minor));
 
+            switch (m06zj4) {
+                case "Check_Beacon":
+                    break;
+
+                case "User_OnClick":
+//                    show.setText(out);
+                    Log.w("output", out);
+                    m06zj4 = "Check_Beacon";
+                    break;
+
+                case "finish_download":
+                    progressDialog.dismiss();
+                    m06zj4 = "Check_Beacon";
+                    break;
+
+                default:
+                    break;
+            }
 
         }
 
@@ -387,108 +316,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
             super.onPreExecute();
         }
 
-
     }
 
 
 }
-
-
-//Project下之libs新增aar檔
-
-
-
-//        graph[0].adjacentEdge(1, 4);
-//
-//        graph[1].adjacentEdge(0, 4);
-//        graph[1].adjacentEdge(2, 6);
-//        graph[1].adjacentEdge(5, 1);
-//
-//        graph[2].adjacentEdge(1, 6);
-//        graph[2].adjacentEdge(3, 5);
-//        graph[2].adjacentEdge(6, 5);
-//
-//        graph[3].adjacentEdge(2, 5);
-//        graph[3].adjacentEdge(4, 5);
-//
-//        graph[4].adjacentEdge(3, 5);
-//        graph[4].adjacentEdge(7, 5);
-//        graph[4].adjacentEdge(9, 15);
-//
-//        graph[5].adjacentEdge(1, 1);
-//        graph[5].adjacentEdge(8, 8);
-//
-//        graph[6].adjacentEdge(2, 5);
-//
-//        graph[7].adjacentEdge(4, 5);
-//
-//        graph[8].adjacentEdge(5, 8);
-//        graph[8].adjacentEdge(10, 5);
-//
-//        graph[9].adjacentEdge(4, 15);
-//        graph[9].adjacentEdge(11, 8);
-//
-//        graph[10].adjacentEdge(8, 5);
-//        graph[10].adjacentEdge(12, 10);
-//
-//        graph[11].adjacentEdge(9, 8);
-//        graph[11].adjacentEdge(14, 11);
-//
-//        graph[12].adjacentEdge(10, 10);
-//        graph[12].adjacentEdge(13, 16);
-//
-//        graph[13].adjacentEdge(12, 16);
-//        graph[13].adjacentEdge(14, 11);
-//
-//        graph[14].adjacentEdge(11, 11);
-//        graph[14].adjacentEdge(13, 11);
-//        graph[14].adjacentEdge(20, 11);
-//
-//        graph[15].adjacentEdge(16, 2);
-//
-//        graph[16].adjacentEdge(15, 2);
-//        graph[16].adjacentEdge(17, 2);
-//
-//        graph[17].adjacentEdge(16, 2);
-//        graph[17].adjacentEdge(18, 6);
-//        graph[17].adjacentEdge(21, 7);
-//
-//        graph[18].adjacentEdge(17, 6);
-//        graph[18].adjacentEdge(19, 6);
-//
-//        graph[19].adjacentEdge(18, 6);
-//        graph[19].adjacentEdge(20, 3);
-//
-//        graph[20].adjacentEdge(14, 11);
-//        graph[20].adjacentEdge(19, 3);
-//        graph[20].adjacentEdge(22, 8);
-//
-//        graph[21].adjacentEdge(17, 7);
-//        graph[21].adjacentEdge(23, 8);
-//
-//        graph[22].adjacentEdge(20, 8);
-//        graph[22].adjacentEdge(24, 12);
-//
-//        graph[23].adjacentEdge(21, 8);
-//        graph[23].adjacentEdge(25, 13);
-//
-//        graph[24].adjacentEdge(22, 12);
-//        graph[24].adjacentEdge(26, 3);
-//
-//        graph[25].adjacentEdge(23, 13);
-//        graph[25].adjacentEdge(26, 4);
-//
-//        graph[26].adjacentEdge(24, 3);
-//        graph[26].adjacentEdge(25, 4);
-//        graph[26].adjacentEdge(30, 23);
-//
-//        graph[27].adjacentEdge(28, 2);
-//
-//        graph[28].adjacentEdge(27, 2);
-//        graph[28].adjacentEdge(29, 6);
-//
-//        graph[29].adjacentEdge(28, 6);
-//        graph[29].adjacentEdge(30, 3);
-//
-//        graph[30].adjacentEdge(26, 23);
-//        graph[30].adjacentEdge(29, 3);
