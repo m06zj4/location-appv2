@@ -1,9 +1,16 @@
 package com.example.yf.location_v2;
 
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.RemoteException;
@@ -14,6 +21,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -48,15 +56,43 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
     int img_out = 0, sour = 0;
     TextView show;
     ProgressDialog progressDialog;
-
+    private static final int REQUEST_ENABLE_BT = 2;
     private TouchLocation TL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.img);
-
         android_id = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);//get andorid device id!!!
+
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo ni = cm.getActiveNetworkInfo();
+        if (ni != null && ni.isConnected()) {
+        } else if (ni == null) {
+
+            AlertDialog.Builder dialog = new AlertDialog.Builder(Dijkstra.this);
+            dialog.setMessage("請開啟網路連線功能")
+                    .setTitle("無法使用")
+                    .setCancelable(false)
+                    .setPositiveButton("確定",
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    finish(); // exit program
+                                    beaconManager.unbind(Dijkstra.this);//停止掃描
+                                }
+                            });
+            dialog.show();
+        }
+
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(Dijkstra.this, "device does not support Bluetooth", Toast.LENGTH_SHORT).show();
+        }
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+
 
         progressDialog = ProgressDialog.show(Dijkstra.this, "提醒", "正在取得資訊請稍候");
 
@@ -210,6 +246,25 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                     jsondata(total);
                 }
 
+//                try {
+//
+//                    SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd hh-mm-ss");//取得時間
+//
+//                    String date = sDateFormat.format(new java.util.Date());
+//
+//
+//                    File myFile = new File("/sdcard/fu/"+date+".txt");//存資訊至SD card
+//                    myFile.createNewFile();
+//                    FileOutputStream fOut = new FileOutputStream(myFile);
+//                    OutputStreamWriter myOutWriter =
+//                            new OutputStreamWriter(fOut);
+//                    myOutWriter.append(total);
+//                    myOutWriter.close();
+//                    fOut.close();
+//                } catch (Exception e) {
+////
+//                }
+
 
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -263,7 +318,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
             switch (m06zj4) {
                 case "Check_Beacon":
-                    http();
+
                     break;
 
                 case "User_OnClick":
