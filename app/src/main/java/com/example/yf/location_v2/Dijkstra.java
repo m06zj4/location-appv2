@@ -107,7 +107,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
         imageView.setMaxWidth(W);
 
         TL = new TouchLocation(H, W);
-        TL.setDotWithJson("111");
+//        TL.setDotWithJson("111");
 
         imageView.setImageBitmap(bitmap);
 
@@ -301,7 +301,8 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
             int count = 0;
             int NodeTotal;
             int width, height, radius, x, y;
-            int[][] temp;
+            int[][] temp,tou;
+            int count2=0;
             JSONObject obj = new JSONObject(test_1);
             //---------------------------------------------start1
             JSONObject information = obj.getJSONObject("information");
@@ -315,6 +316,8 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
             Log.w("mydebug_radius", String.valueOf(radius));
             //---------------------------------------------end1
             temp = new int[road][3];
+            tou = new int[road][2];
+
             //---------------------------------------------start2
             JSONArray algorithm = obj.getJSONArray("algorithm");
             for (int i = 0; i < NodeTotal; i++) {
@@ -331,6 +334,12 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                 JSONArray neighbor = nowNode.getJSONArray("neighbor");
                 JSONArray cost = nowNode.getJSONArray("distance");
                 int now = nowNode.getInt("this");
+                tou[count2][0] = x;
+                tou[count2][1]=y;
+                Log.w("array1", String.valueOf(tou[count2][0]));
+                Log.w("array2", String.valueOf(tou[count2][1]));
+                count2++;
+
                 Log.w("mydebug_this", String.valueOf(now));
                 for (int j = 0; j < neighbor.length(); j++) {
                     Log.w("mydebug_for2", "start for");
@@ -348,7 +357,10 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
             }
 
+
+
             setMap(temp);
+            TL.setDotWithJson(tou);
             Log.w("mydebug_finishsetmap", "okok");
 
         } catch (Exception e) {
