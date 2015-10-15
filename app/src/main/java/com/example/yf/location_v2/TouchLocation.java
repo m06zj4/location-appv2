@@ -33,18 +33,18 @@ public class TouchLocation {
             dots[i] = new Dot();
         }
 
-            int x,y;
-            for(int k=0;k<31;k++){
-                dots[k]=new Dot();
-                x=json[k][0];
-                Log.w("mydebug_jx",String.valueOf(json[k][0]));
-                y=json[k][1];
+        int x, y;
+        for (int k = 0; k < 31; k++) {
+            dots[k] = new Dot();
+            x = json[k][0];
+            Log.w("mydebug_jx", String.valueOf(json[k][0]));
+            y = json[k][1];
 //
-                dots[k].X=x;
-                dots[k].Y=y;
+            dots[k].X = x;
+            dots[k].Y = y;
 //                Log.w("")
 //
-            }
+        }
 
 
 //
@@ -152,8 +152,19 @@ public class TouchLocation {
             return null;
         }
 
-        if (nodeNumber < dots.length){
+        if (nodeNumber < dots.length) {
             return dots[nodeNumber].X;
+        }
+        return null;
+    }
+
+    public Dot getDot(int nodeNumber) {
+        if (dots == null) {
+            return null;
+        }
+
+        if (nodeNumber < dots.length) {
+            return dots[nodeNumber];
         }
         return null;
     }
@@ -163,7 +174,7 @@ public class TouchLocation {
             return null;
         }
 
-        if (nodeNumber < dots.length){
+        if (nodeNumber < dots.length) {
             return dots[nodeNumber].Y;
         }
         return null;
@@ -181,7 +192,8 @@ public class TouchLocation {
         return null;
     }
 
-    private class Dot {
+
+    class Dot {
         public float X = 0;
         public float Y = 0;
     }

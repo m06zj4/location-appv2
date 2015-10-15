@@ -52,13 +52,13 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
     Collection<Beacon> max;
     private String android_id;
     ShortestPath SP;
-    private ImageView imageView;
     private Bitmap bitmap;
     int img_out = 0, sour = 0;
     TextView show;
     ProgressDialog progressDialog;
     private static final int REQUEST_ENABLE_BT = 2;
     private TouchLocation TL;
+    private ImageMap imageMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,15 +96,19 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
 
         progressDialog = ProgressDialog.show(Dijkstra.this, "提醒", "正在取得資訊請稍候");
-
-        imageView = (ImageView) findViewById(R.id.image_view);
+        ImageView imageView = (ImageView) findViewById(R.id.image_view);
 //        show = (TextView) findViewById(R.id.textView5);
         bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.photo);
+        Bitmap user = BitmapFactory.decodeResource(getResources(), R.drawable.user);
+        Bitmap lock = BitmapFactory.decodeResource(getResources(), R.drawable.lock);
+        Bitmap dire = BitmapFactory.decodeResource(getResources(), R.drawable.direction);
+        imageMap = new ImageMap(imageView, user, lock, dire);
         int H = bitmap.getHeight();
         int W = bitmap.getWidth();
 
         imageView.setMaxHeight(H);
         imageView.setMaxWidth(W);
+        imageMap.setMapImage(bitmap);
 
         TL = new TouchLocation(H, W);
 //        TL.setDotWithJson("111");
@@ -119,17 +123,22 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                     Log.w("123", "X:" + event.getX() + "  Y:" + event.getY());
                     Object oo = TL.analyseTouchLocation(event.getX(), event.getY());
                     if (oo != null) {
+
+                        Log.w("mydebug_oo", "123123");
+
                         img_out = (int) oo;
 
+                        Log.w("mydebug_img", String.valueOf(img_out));
                         try {
                             sour = Integer.parseInt(minor.toString());
+                            Log.w("mydebug_sour", String.valueOf(sour));
                         } catch (Exception e) {
                             sour = 0;
                             e.printStackTrace();
                         }
 
                         m06zj4 = "User_OnClick";
-//                        show.setText("");
+
                         new LoadingDataAsyncTask().execute();
 
 
@@ -137,6 +146,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                 }
                 return true;
             }
+
         });
 
         beaconManager = BeaconManager.getInstanceForApplication(this);
@@ -159,12 +169,19 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
     }
 
 
-    public String calculateShortestPath(int source, int destination, int option) {
+    public int[] calculateShortestPath(int source, int destination, int option) {
+        if (SP == null) {
+            return null;
+        }
+        // SP.floydWarshell.calculateDistance();
+        // SP.floydWarshell.output();
 
         SP.dijkstra.calculateDistance(source);
         SP.dijkstra.output(option, destination);
 
-        return SP.TextOut;
+//        return SP.TextOut;
+        return SP.dijkstra.getPath();
+
     }
 
     public void setMap(int[][] mapData) {
@@ -198,17 +215,27 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                     major = beacons.iterator().next().getId2().toString();
                     minor = beacons.iterator().next().getId3().toString();
                     Dist = String.valueOf(beacons.iterator().next().getDistance());
+                    Log.w("mydebug_beacon_UUID", UUID);
+                    Log.w("mydebug_beacon_major", major);
+                    Log.w("mydebug_beacon_minor", minor);
+                    Log.w("mydebug_beacon_dist", Dist);
 
                     if (max == null) {
                         max = beacons;
                     } else {
                         if (max.iterator().next().getDistance() > beacons.iterator().next().getDistance()) {
                             max = beacons;
+//
+//                        if (max.iterator().next().getDistance() > 2) {
+//                            max = beacons;
+
                         }
                     }
 
                     if (m06zj4.equals("0")) {
                         m06zj4 = "finish_download";
+                        new LoadingDataAsyncTask().execute();
+                    } else {
                         new LoadingDataAsyncTask().execute();
                     }
 
@@ -234,7 +261,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
             URL url;
             HttpURLConnection connection = null;
             try {
-                url = new URL("http://120.114.138.143/test/get_map.php");
+                url = new URL("http://120.114.104.175/test/get_map.php");
 
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
@@ -301,8 +328,8 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
             int count = 0;
             int NodeTotal;
             int width, height, radius, x, y;
-            int[][] temp,tou;
-            int count2=0;
+            int[][] temp, tou;
+            int count2 = 0;
             JSONObject obj = new JSONObject(test_1);
             //---------------------------------------------start1
             JSONObject information = obj.getJSONObject("information");
@@ -335,7 +362,7 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                 JSONArray cost = nowNode.getJSONArray("distance");
                 int now = nowNode.getInt("this");
                 tou[count2][0] = x;
-                tou[count2][1]=y;
+                tou[count2][1] = y;
                 Log.w("array1", String.valueOf(tou[count2][0]));
                 Log.w("array2", String.valueOf(tou[count2][1]));
                 count2++;
@@ -358,7 +385,6 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
             }
 
 
-
             setMap(temp);
             TL.setDotWithJson(tou);
             Log.w("mydebug_finishsetmap", "okok");
@@ -367,32 +393,11 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
         }
 
-//        try {
-//            int count = 0;
-//            int[][] temp;
-//            Log.w("debug5432", test_1);
-//            temp = new int[64][3];
-//            JSONArray array = new JSONArray(test_1);
-//            for (int i = 0; i < 31; i++) {
-//                JSONObject jsonobj = array.getJSONObject(i);
-//                JSONArray jsonarray = jsonobj.getJSONArray("neighbor");
-//                JSONArray jsonarray_2 = jsonobj.getJSONArray("distance");
-//                int now = jsonobj.getInt("this");
+
 //
-//                for (int j = 0; j < jsonarray.length(); j++) {
-//                    temp[count][0] = now;
-//                    temp[count][1] = jsonarray.getInt(j);
-//                    temp[count][2] = jsonarray_2.getInt(j);
-//                    count++;
-//                }
-//            }
-//            setMap(temp);
-//
-//        } catch (Exception e) {
-//
-//        }
 
     }
+//
 
     class LoadingDataAsyncTask extends AsyncTask<String, Integer, Integer> {
 
@@ -401,15 +406,19 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
             switch (m06zj4) {
                 case "Check_Beacon":
-
                     break;
 
                 case "User_OnClick":
-                    out = calculateShortestPath(sour, img_out, 2);
+//                    imageMap.drawLockLocation(img_out);
+
+//                    out = calculateShortestPath(sour, img_out, 2);
+                    calculateShortestPath(sour, img_out, 2);
+                    imageMap.drawPath(SP.dijkstra.getPath());
                     break;
 
                 case "finish_download":
                     http();
+
                     break;
 
                 default:
@@ -427,16 +436,20 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
 
             switch (m06zj4) {
                 case "Check_Beacon":
+                    Log.w("mydebug_cb", "21332");
+                    imageMap.reloadImage();
                     break;
 
                 case "User_OnClick":
-//                    show.setText(out);
                     Log.w("output", out);
                     out = "reset";
                     m06zj4 = "Check_Beacon";
                     break;
 
                 case "finish_download":
+                    int test = Integer.parseInt(minor);
+//                    Log.w("mydebug_beacon_minor", String.valueOf(test));
+                    imageMap.drawUserLocation(test);
                     progressDialog.dismiss();
                     m06zj4 = "Check_Beacon";
                     Toast.makeText(Dijkstra.this, "讀取完成", Toast.LENGTH_SHORT).show();
@@ -447,19 +460,44 @@ public class Dijkstra extends ActionBarActivity implements BeaconConsumer {
                     break;
             }
 
-        }
 
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
         }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
     }
+
+//        private class DrawMap extends AsyncTask<PointF, Void, Boolean> {
+//
+//            @Override
+//            protected Boolean doInBackground(PointF... PointFs) {
+//                if (PointFs.length == 1) {
+//
+//                    boolean draw = false;
+//
+//
+//                imageMap.drawPath(SP.dijkstra.getPath());
+//                Log.w("mydebug_imagemap","123");
+//
+//                    return draw;
+//                }
+//                return null;
+//            }
+//
+//            protected void onPostExecute(Boolean aBoolean) {
+//                super.onPostExecute(aBoolean);
+//
+//
+//                    imageMap.reloadImage();
+//            }
+//
+//            // ------------------------------------------------------------------------------*/
+//
+//
+//            @Override
+//            protected void onPreExecute() {
+//                super.onPreExecute();
+//
+//            }
+//
+//        }
 
 
 }

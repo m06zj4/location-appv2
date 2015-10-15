@@ -17,6 +17,7 @@ public class ShortestPath {
     public vertex[] graph;
     public int[][] adjMatrix, distMatrix;
     public String TextOut = "";
+    private int[] mPath = null;
 
     public class edge {
         public int id;
@@ -194,7 +195,7 @@ public class ShortestPath {
                     TextOut += source + "->" + destination;
 
                 else
-                    printPath(destination);
+                    printPath(destination, 0);
                 TextOut += " " + distance[destination] + "\n";
 
             }
@@ -205,27 +206,34 @@ public class ShortestPath {
             if (destination == source)
                 TextOut += source + "->" + destination;
             else
-                printPath(destination);
+                printPath(destination, 0);
             TextOut += " " + distance[destination] + "\n";
-
 
 
         }
 
-        private void printPath(int node) {
+        private void printPath(int node, int count) {
             if (node == source) {
                 TextOut += String.valueOf(node);
+                mPath = new int[count + 1];
+                mPath[count] = node;
             } else if (predecessor[node] == -1) {
                 TextOut += "No path from " + source + " to " + node + "\n";
+                mPath = null;
             } else {
-                printPath(predecessor[node]);
+                printPath(predecessor[node],count+1);
                 TextOut += "->" + node;
-
+                Log.w("mydebug_node", String.valueOf(node));
+                mPath[count] = node;
 
             }
         }
 
+        public int[] getPath() {
+            return mPath;
+        }
     }
+
 
     private void printMatrix(int inDistMatrix[][]) {  //產生矩陣
         for (int i = 0; i < V; i++) {
@@ -240,8 +248,6 @@ public class ShortestPath {
 
         }
         TextOut += "\n";
-
-
 
 
     }
